@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DelphiBuilder/DelphiBuilder.csproj" />
+  <Project Path="DelphiBuilder.Tests/DelphiBuilder.Tests.csproj" />
+</Solution>

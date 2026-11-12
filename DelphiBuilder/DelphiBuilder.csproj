@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationIcon>Assets/App.ico</ApplicationIcon>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+    <RootNamespace>DelphiBuilder</RootNamespace>
+    <AssemblyName>DelphiBuilder</AssemblyName>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.5" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.14" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets/App.ico" />
+    <EmbeddedResource Include="Assets/GitHub.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../README.md" Link="README.md" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="../CHANGELOG.md" Link="CHANGELOG.md" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="../LICENSE" Link="LICENSE" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="../THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
