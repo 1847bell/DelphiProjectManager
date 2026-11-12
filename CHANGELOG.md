@@ -15,6 +15,7 @@
 - 仓库仅发布原生 C# 项目；忽略本地 VSCodeVersion 原型、开发规划、构建/验证产物、IDE 状态与个人数据库。
 - README 增加 `Copyright (C) 2026 AlexNiu` 与 `GPL-3.0-only` 声明，保留完整 GPLv3 LICENSE，并随便携包分发第三方 MIT/Apache-2.0 许可与版权声明。
 - 新增 Windows GitHub Actions：.NET 10 构建与回归测试、无运行时便携 ZIP、标签或手动触发的 Release 草稿；不自动公开发布。
+- 重整面向公众的项目说明，补充功能概览和快速开始，明确安装、数据备份、兼容性与源码构建；移除个人环境及内部验收记录。
 
 ## 1.0.0 — 2026-11-12
 

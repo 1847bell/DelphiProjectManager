@@ -16,9 +16,9 @@
 2. 安装 [.NET 10 Desktop Runtime x64](https://dotnet.microsoft.com/zh-cn/download/dotnet/10.0)，运行 `DelphiBuilder.exe`。
 3. 编译功能需要自行合法安装 Delphi XE7 / BDS 15.0；本程序不附带 Delphi 工具链。
 
-ZIP 不包含 .NET 运行时、个人数据库或旧 VS Code 插件。升级前退出程序并备份 `delphi-builder.db`，覆盖应用文件时保留该数据库。
+ZIP 不包含 .NET 运行时或用户数据库。升级前退出程序并备份 `delphi-builder.db`，覆盖应用文件时保留该数据库。
 
-实际工具链验证仅覆盖 **XE7 Win32**；Win64 需要 DCC64，本轮未执行实机验证。GitHub CI 执行原生构建与隔离回归测试，不代表 Delphi 编译器或 GUI 已在 CI 中验证。
+兼容性：已验证 Delphi XE7 / BDS 15.0 的 **Win32 编译**。Win64 目标需要 `DCC64.exe`，兼容性尚未完成验证；其他 Delphi 版本暂不支持。
 
 ### 源码与许可
 
