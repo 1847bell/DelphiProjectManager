@@ -11,6 +11,7 @@ public sealed class SettingsForm : Form
     private readonly ComboBox _encoding = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 200, Name = "OutputEncoding" };
     private readonly TextBox _arguments = new() { Multiline = true, ScrollBars = ScrollBars.Both, WordWrap = false, Dock = DockStyle.Fill, Name = "AdditionalArguments" };
     private readonly DataGridView _environment = new() { Dock = DockStyle.Fill, Name = "EnvironmentVariables", AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, RowHeadersWidth = 28, BackgroundColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+    private readonly CheckBox _mcpEnabled = new() { Text = "启用 MCP", AutoSize = true, Name = "McpEnabled" };
     public AppSettings Settings { get; private set; }
 
     public SettingsForm(AppSettings settings)
@@ -29,6 +30,7 @@ public sealed class SettingsForm : Form
         _rsvars.Text = settings.RsVarsPath;
         _brcc.Text = settings.ResourceCompilerPath;
         _resources.Checked = settings.ResourceBuild;
+        _mcpEnabled.Checked = settings.McpEnabled;
         _history.Value = Math.Clamp(settings.OutputPathHistoryLimit, 1, 15);
         _encoding.Items.AddRange(["系统 ANSI 代码页", "简体中文 CP936", "UTF-8"]);
         _encoding.SelectedIndex = settings.OutputEncoding switch { "cp936" => 1, "utf8" => 2, _ => 0 };
@@ -44,6 +46,7 @@ public sealed class SettingsForm : Form
         tabs.TabPages.Add(CreateCompilerTab());
         tabs.TabPages.Add(CreateOptionsTab());
         tabs.TabPages.Add(CreateEnvironmentTab());
+        tabs.TabPages.Add(CreateMcpTab());
         root.Controls.Add(tabs, 0, 0);
         var save = Ui.Button("保存设置", "SaveSettings", (_, _) => Save());
         var cancel = Ui.Button("取消", "CancelSettings", (_, _) => DialogResult = DialogResult.Cancel);
@@ -113,6 +116,37 @@ public sealed class SettingsForm : Form
         return tab;
     }
 
+    private TabPage CreateMcpTab()
+    {
+        var tab = new TabPage("MCP") { Padding = new Padding(8), UseVisualStyleBackColor = true };
+        var table = Ui.Table();
+        table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        table.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        _mcpEnabled.Margin = new Padding(3, 8, 3, 12);
+        table.Controls.Add(_mcpEnabled, 0, 0);
+        table.Controls.Add(new Label
+        {
+            AutoSize = true, Dock = DockStyle.Fill, Margin = new Padding(3, 3, 3, 12),
+            Text = "默认关闭，保存设置后生效。启用后，AI 可查询已登记项目并编译。\n使用标准 stdio MCP，仅当前 Windows 用户可连接，不开放网络端口。\n请保持主窗口运行；编译使用已保存的项目设置，存在未保存编辑时拒绝编译。\nAI 与界面共用编译日志和取消按钮。仅连接可信的 AI 客户端。\n\n将以下配置合并到 AI 客户端的 MCP 配置中："
+        }, 0, 1);
+        var configuration = new TextBox
+        {
+            Name = "McpClientConfiguration", Multiline = true, ReadOnly = true, Dock = DockStyle.Fill,
+            ScrollBars = ScrollBars.Both, WordWrap = false,
+            Text = McpServer.CreateClientConfiguration(Path.Combine(AppContext.BaseDirectory, "DelphiBuilder.exe"))
+        };
+        table.Controls.Add(configuration, 0, 2);
+        table.Controls.Add(Ui.Toolbar(Ui.Button("复制 MCP 配置", "CopyMcpConfiguration", (_, _) =>
+        {
+            try { Clipboard.SetText(configuration.Text); }
+            catch (Exception exception) { Ui.ShowError(this, exception); }
+        })), 0, 3);
+        tab.Controls.Add(table);
+        return tab;
+    }
+
     private static TextBox PathBox(string name) => new() { Name = name, Dock = DockStyle.Fill };
 
     private Control WithBrowse(TextBox box, string filter)
@@ -161,6 +195,7 @@ public sealed class SettingsForm : Form
                 DelphiVersion = "XE7", CompilerPath32 = _compiler32.Text.Trim(), CompilerPath64 = _compiler64.Text.Trim(),
                 RsVarsPath = _rsvars.Text.Trim(), ResourceCompilerPath = _brcc.Text.Trim(), ResourceBuild = _resources.Checked,
                 OutputPathHistoryLimit = (int)_history.Value,
+                McpEnabled = _mcpEnabled.Checked,
                 OutputEncoding = _encoding.SelectedIndex switch { 1 => "cp936", 2 => "utf8", _ => "system" },
                 AdditionalArguments = _arguments.Lines.Where(line => !string.IsNullOrWhiteSpace(line)).ToList(),
                 Environment = variables

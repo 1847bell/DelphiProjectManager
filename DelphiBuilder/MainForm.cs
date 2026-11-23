@@ -199,6 +199,8 @@ public sealed partial class MainForm : Form
         if (long.TryParse(_store.GetState("project"), out var projectId) && _store.GetProject(projectId) is { } project && project.WorkspaceId == _workspace?.Id)
             await ActivateProjectAsync(project);
         _status.Text = "就绪 · 数据库：" + Path.Combine(AppContext.BaseDirectory, "delphi-builder.db");
+        await ApplySettingsAsync(_settings, persist: false);
+        if (_settings.McpEnabled) _status.Text += " · MCP 已启用（stdio）";
     }
 
     private void RefreshWorkspaces()
@@ -452,10 +454,9 @@ public sealed partial class MainForm : Form
         if (!await ConfirmEditsAsync()) return;
         using var dialog = new SettingsForm(_settings);
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
-        _store.SaveSettings(dialog.Settings);
-        _settings = dialog.Settings;
+        await ApplySettingsAsync(dialog.Settings);
         if (_activeProject is not null) await ActivateProjectAsync(_activeProject);
-        _status.Text = "设置已保存";
+        _status.Text = _settings.McpEnabled ? "设置已保存 · MCP 已启用（stdio）" : "设置已保存 · MCP 已关闭";
     }
 
     private async Task BuildAsync()
@@ -463,36 +464,8 @@ public sealed partial class MainForm : Form
         if (_activeProject is null || _evaluation is null || !await ConfirmEditsAsync()) return;
         // A discarded draft must not remain visible as if it were being compiled.
         DisplayEvaluation();
-        _pendingLog.Clear();
-        _log.Clear();
-        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
-        _buildCancellation = cancellation;
-        UpdateButtons();
-        var progress = new Progress<string>(text => { if (!_closing) _pendingLog.Append(text); });
-        try
-        {
-            _status.Text = "准备编译：" + _activeProject.Name;
-            var plan = await _buildService.CreatePlanAsync(_activeProject.FilePath, _evaluation.Configuration,
-                _evaluation.Platform, _settings, cancellationToken: cancellation.Token);
-            _status.Text = $"正在编译 {_activeProject.Name} · {plan.Evaluation.Configuration} / {plan.Evaluation.Platform}";
-            var result = await _buildService.BuildAsync(plan, progress, cancellation.Token);
-            _status.Text = result.Cancelled ? "编译已取消" : result.ExitCode == 0
-                ? $"编译成功 · {result.Duration.TotalSeconds:F2} 秒"
-                : $"编译失败 · 退出代码 {result.ExitCode} · {result.Duration.TotalSeconds:F2} 秒";
-            _pendingLog.AppendLine().AppendLine(_status.Text);
-        }
-        catch (OperationCanceledException) { _status.Text = "编译已取消"; _pendingLog.AppendLine(_status.Text); }
-        catch (Exception exception)
-        {
-            _status.Text = "编译失败：" + exception.Message;
-            _pendingLog.AppendLine(_status.Text);
-        }
-        finally
-        {
-            _buildCancellation = null;
-            FlushLog();
-            UpdateButtons();
-        }
+        await ExecuteBuildAsync(_activeProject, _evaluation.Configuration, _evaluation.Platform,
+            rebuild: false, _lifetime.Token, captureLog: false);
     }
 
     private void FlushLog()
@@ -522,6 +495,7 @@ public sealed partial class MainForm : Form
                 if (answer == DialogResult.Yes && _activeProject is not null && _evaluation is not null)
                     _projectService.Save(_activeProject.FilePath, _evaluation.Configuration, _evaluation.Platform, _version.Text, _outputPath.Text);
             }
+            await StopMcpAsync();
             _lifetime.Cancel();
             _logTimer.Stop();
             _logTimer.Dispose();

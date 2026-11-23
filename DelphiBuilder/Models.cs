@@ -20,6 +20,7 @@ public sealed class AppSettings
     public string RsVarsPath { get; set; } = "";
     public string ResourceCompilerPath { get; set; } = "";
     public bool ResourceBuild { get; set; } = true;
+    public bool McpEnabled { get; set; }
     public int OutputPathHistoryLimit { get; set; } = 5;
     public string OutputEncoding { get; set; } = "system";
     public List<string> AdditionalArguments { get; set; } = [];

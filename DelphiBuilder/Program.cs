@@ -5,8 +5,10 @@ namespace DelphiBuilder;
 internal static class Program
 {
     [STAThread]
-    private static void Main()
+    private static int Main(string[] args)
     {
+        if (args is ["--mcp"])
+            return McpServer.RunStdioAsync().GetAwaiter().GetResult();
         ApplicationConfiguration.Initialize();
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -22,5 +24,6 @@ internal static class Program
             MessageBox.Show($"无法启动程序：{exception.Message}\n\n数据库存储在程序目录。请将程序放到当前用户可写的目录。",
                 "Delphi 项目管理器", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+        return 0;
     }
 }
